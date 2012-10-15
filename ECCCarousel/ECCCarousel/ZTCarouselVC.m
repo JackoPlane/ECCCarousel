@@ -6,29 +6,24 @@
 //  Copyright (c) 2012 Zachry Thayer. All rights reserved.
 //
 
-#import "ZTCollectionVC.h"
-
+#import "ZTCarouselVC.h"
 #import "ZTTestCell.h"
+#import "ZTCarouselLayout.h"
 
-@interface ZTCollectionVC ()
+@interface ZTCarouselVC ()
 
 @end
 
-@implementation ZTCollectionVC
+@implementation ZTCarouselVC
 
-- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+- (void)viewDidAppear:(BOOL)animated
 {
-    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
-    if (self) {
-        // Custom initialization
-    }
-    return self;
-}
-
-- (void)viewDidLoad
-{
-    [super viewDidLoad];
-	// Do any additional setup after loading the view.
+    [super viewDidAppear:animated];
+    
+    //Center on load
+    CGFloat centerX = (self.collectionView.contentSize.width - self.collectionView.bounds.size.width)/2.f;
+    self.collectionView.contentOffset = CGPointMake(centerX,0);
+    
 }
 
 - (void)didReceiveMemoryWarning
@@ -40,7 +35,7 @@
 #pragma mark - UICollectionView Datasource
 - (NSInteger)collectionView:(UICollectionView *)view numberOfItemsInSection:(NSInteger)section
 {
-    return 10;  
+    return 10;
 }
 
 - (NSInteger)numberOfSectionsInCollectionView: (UICollectionView *)collectionView
@@ -67,7 +62,8 @@
 {
     // TODO: Select Item
 }
-- (void)collectionView:(UICollectionView *)collectionView didDeselectItemAtIndexPath:(NSIndexPath *)indexPath {
+- (void)collectionView:(UICollectionView *)collectionView didDeselectItemAtIndexPath:(NSIndexPath *)indexPath
+{
     // TODO: Deselect item
 }
 
@@ -81,6 +77,13 @@
 (UICollectionView *)collectionView layout:(UICollectionViewLayout*)collectionViewLayout insetForSectionAtIndex:(NSInteger)section
 {
     return UIEdgeInsetsMake(50, 20, 50, 20);
+}
+
+#pragma UIScrollDelegate
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
+{
+    ZTCarouselLayout *layoutEngine = (ZTCarouselLayout *)self.collectionView.collectionViewLayout;
+    [layoutEngine scrollViewDidEndDecelerating:scrollView];
 }
 
 @end

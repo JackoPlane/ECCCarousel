@@ -8,6 +8,6 @@
 
 #import <UIKit/UIKit.h>
 
-@interface ZTCollectionVC : UICollectionViewController
+@interface ZTCarouselVC : UICollectionViewController
 
 @end
