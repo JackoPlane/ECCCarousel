@@ -31,7 +31,7 @@
     self = [super initWithCoder:aDecoder];
     if (self)
     {
-        _scrollPadding = 3.f;
+        _scrollPadding = 1.f;//Huge virtual scrolling limit (for people with scroll OCD)
         _rotation = -TAU/8.f;
         _squareItems = YES;
         
@@ -45,7 +45,7 @@
     
     CATransform3D perspectiveTransform = CATransform3DIdentity;
     perspectiveTransform.m34 = -1.f/500.f;
-    perspectiveTransform = CATransform3DRotate(perspectiveTransform, _rotation, 0, 0, 1.f);
+    //perspectiveTransform = CATransform3DRotate(perspectiveTransform, _rotation, 0, 0, 1.f);
     self.collectionView.layer.sublayerTransform = perspectiveTransform;
     
     _cellCount = [self.collectionView numberOfItemsInSection:0];
@@ -76,14 +76,21 @@
     UICollectionViewLayoutAttributes *attributes = [UICollectionViewLayoutAttributes layoutAttributesForCellWithIndexPath:indexPath];
         
     CGFloat step = TAU / _cellCount;
-    // 0 rotation means the focused item will be at 1.0 on the x axis and 0.0 on z axis, however we want to look at -1.0 z and 0.0 x, so lets offset our radians by this quarter of a circle
     CGFloat rotationOffset = TAU / 4;
     _scrollOffset = (self.collectionView.contentOffset.x)/(self.collectionView.contentSize.width - self.collectionView.bounds.size.width) * _scrollPadding;
+   // _scrollPadding += _rotationOffset;
     
-    CGFloat radians = (indexPath.row * step) + rotationOffset + (_scrollOffset * TAU);
+    while (_scrollOffset > TAU)
+    {
+        _scrollOffset -= TAU;
+    }
+    while (_scrollOffset < -TAU)
+    {
+        _scrollOffset += TAU;
+    }
     
-    radians = radians;//invert order
-    
+    CGFloat radians = ((_cellCount - indexPath.row) * step) + rotationOffset + (_scrollOffset * TAU);
+        
     CGFloat x = _carouselOffset.width + _radius * cosf(radians);
     CGFloat z = -_radius + _radius * sinf(radians);
     
@@ -91,7 +98,7 @@
     
     if (_squareItems)
     {
-        transform = CATransform3DRotate(transform, -_rotation, 0, 0, 1.f);
+      //  transform = CATransform3DRotate(transform, -_rotation, 0, 0, 1.f);
     }
     
     attributes.transform3D = transform;
@@ -102,12 +109,16 @@
 
 - (CGPoint)targetContentOffsetForProposedContentOffset:(CGPoint)proposedContentOffset withScrollingVelocity:(CGPoint)velocity
 {
-    CGFloat scrollWidth = self.collectionView.contentSize.width - self.collectionView.bounds.size.width;
-    CGFloat proposedOffset = proposedContentOffset.x/scrollWidth;
-    NSInteger itemIndex = proposedOffset * _cellCount;
-    //itemIndex += velocity.x / 200.f;
+    CGFloat baseContentSize = self.collectionView.contentSize.width/_scrollPadding;
+    CGFloat step = (baseContentSize - self.collectionView.bounds.size.width) / _cellCount;
+    NSInteger index = ceilf((proposedContentOffset.x/_scrollPadding) / step);
     
-    return CGPointMake(scrollWidth/_cellCount * itemIndex, 0);
+    NSInteger baseIndex = proposedContentOffset.x / (baseContentSize - self.collectionView.bounds.size.width);
+    CGFloat baseOffset = baseIndex * (baseContentSize);
+    
+    CGFloat contentX = baseOffset + (index * step);
+    
+    return CGPointMake(contentX, 0);
 }
 
 - (NSArray*)layoutAttributesForElementsInRect:(CGRect)rect
@@ -126,9 +137,22 @@
 - (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
 {
     //Center offset after scroll
+    
     CGFloat centerX = (scrollView.contentSize.width - scrollView.bounds.size.width)/2.f;
-    scrollView.contentOffset = CGPointMake(centerX,0);
-    _scrollOffset -= (scrollView.contentOffset.x)/(scrollView.contentSize.width - scrollView.bounds.size.width) * _scrollPadding;
+    _rotationOffset = _scrollOffset - centerX;
+    
+    while (_rotationOffset > TAU)
+    {
+        _rotationOffset -= TAU;
+    }
+    while (_rotationOffset < 0)
+    {
+        _rotationOffset += TAU;
+    }
+    
+ //   scrollView.contentOffset = CGPointMake(centerX,0);
+    
+    
 }
 
 @end

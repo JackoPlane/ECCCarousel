@@ -20,7 +20,7 @@
 {
     [super viewDidAppear:animated];
     
-    //Center on load
+//    //Center on load
     CGFloat centerX = (self.collectionView.contentSize.width - self.collectionView.bounds.size.width)/2.f;
     self.collectionView.contentOffset = CGPointMake(centerX,0);
     
